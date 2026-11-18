@@ -2,13 +2,23 @@ import SwiftUI
 
 struct RoadmapView: View {
     @Environment(ProgressStore.self) private var store
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     HeroCard()
+                    DailyCard()
                     UpNextCard()
+                    SectionHeader("Start here", icon: "graduationcap.fill")
+                        .padding(.top, 4)
+                    ForEach(LessonBank.fundamentals) { lesson in
+                        NavigationLink(value: lesson) {
+                            LessonCard(lesson: lesson)
+                        }
+                        .buttonStyle(PressableStyle())
+                    }
                     SectionHeader("Roadmap", icon: "map")
                         .padding(.top, 4)
                     roadmapTree
@@ -18,6 +28,17 @@ struct RoadmapView: View {
             }
             .background(Theme.background.ignoresSafeArea())
             .navigationTitle("CodeMe")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $showSettings) { SettingsView() }
             .appDestinations()
         }
     }
@@ -129,6 +150,65 @@ private struct HeroBadge: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(.white.opacity(0.18), in: Capsule())
+    }
+}
+
+private struct DailyCard: View {
+    @Environment(ProgressStore.self) private var store
+    @AppStorage(SettingsKey.dailyGoal) private var goal = SettingsKey.defaultDailyGoal
+
+    var body: some View {
+        let today = store.solvedToday
+        let met = today >= goal
+        let daily = store.problemOfTheDay
+
+        HStack(spacing: 14) {
+            ZStack {
+                ProgressRing(progress: Double(today) / Double(max(goal, 1)), lineWidth: 7,
+                             fill: AnyShapeStyle(met ? AnyShapeStyle(Theme.easy) : AnyShapeStyle(AngularGradient(colors: [.orange, .pink, .orange], center: .center))))
+                if met {
+                    Image(systemName: "checkmark")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(Theme.easy)
+                } else {
+                    Text("\(today)/\(goal)")
+                        .font(.caption.weight(.bold).monospacedDigit())
+                }
+            }
+            .frame(width: 58, height: 58)
+            .accessibilityLabel("Daily goal: \(today) of \(goal) problems solved today")
+
+            NavigationLink(value: daily) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sun.max.fill").foregroundStyle(.orange)
+                        Text("PROBLEM OF THE DAY")
+                            .tracking(1)
+                    }
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    Text(daily.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        DifficultyPill(difficulty: daily.difficulty)
+                        if store.isSolved(daily) {
+                            Label("Done", systemImage: "checkmark.circle.fill")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(Theme.easy)
+                        } else {
+                            Text(met ? "Goal met, bonus round!" : "Daily goal: \(goal)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+        }
+        .card()
     }
 }
 

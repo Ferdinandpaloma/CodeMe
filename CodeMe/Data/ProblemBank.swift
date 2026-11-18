@@ -6,8 +6,15 @@ enum ProblemBank {
         let combined = arrays + twoPointers + slidingWindow + stack
             + binarySearch + linkedList + trees + tries
             + heap + backtracking + graphs + advancedGraphs
-            + dp1d + dp2d + greedy + intervals + math + bits
-        return Topic.allCases.flatMap { topic in combined.filter { $0.topic == topic } }
+            + dp1d + dp2d + greedy + intervals + math + bits + extra
+        let rank: [Difficulty: Int] = [.easy: 0, .medium: 1, .hard: 2]
+        return Topic.allCases.flatMap { topic in
+            // Stable sort: easy → medium → hard inside each topic, keeping the curated order otherwise.
+            combined.enumerated()
+                .filter { $0.element.topic == topic }
+                .sorted { (rank[$0.element.difficulty]!, $0.offset) < (rank[$1.element.difficulty]!, $1.offset) }
+                .map(\.element)
+        }
     }()
 
     static let byTopic: [Topic: [Problem]] = Dictionary(grouping: all, by: \.topic)

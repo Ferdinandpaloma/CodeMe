@@ -1,8 +1,9 @@
 import SwiftUI
+import Charts
 
 struct StatsView: View {
     @Environment(ProgressStore.self) private var store
-    @State private var confirmReset = false
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -14,33 +15,77 @@ struct StatsView: View {
                         StatTile(icon: "calendar", value: "\(store.activeDays)", label: "Active days", color: Theme.accent2)
                         StatTile(icon: "star.fill", value: "\(store.starred.count)", label: "Starred", color: .yellow)
                     }
+                    HStack(spacing: 10) {
+                        StatTile(icon: "arrow.triangle.2.circlepath", value: "\(store.totalReviews)", label: "Reviews", color: Theme.accent)
+                        StatTile(icon: "book.fill", value: "\(store.completedLessons.count)", label: "Lessons", color: Color(hex: 0x6366F1))
+                        StatTile(icon: "timer", value: "\(store.interviews.count)", label: "Interviews", color: Theme.medium)
+                    }
+                    weeklyChart
+                    AchievementsCard()
                     activityCard
                     topicsCard
-                    Button(role: .destructive) {
-                        confirmReset = true
-                    } label: {
-                        Label("Reset Progress", systemImage: "trash")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                    }
-                    .foregroundStyle(Theme.hard)
-                    .card(padding: 0)
                 }
                 .padding(16)
                 .padding(.bottom, 24)
             }
             .background(Theme.background.ignoresSafeArea())
             .navigationTitle("Progress")
-            .appDestinations()
-            .confirmationDialog("Reset all progress?", isPresented: $confirmReset, titleVisibility: .visible) {
-                Button("Reset Everything", role: .destructive) {
-                    withAnimation { store.resetAll() }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
                 }
-            } message: {
-                Text("This clears solved problems, stars, saved code and your quiz record.")
             }
+            .sheet(isPresented: $showSettings) { SettingsView() }
+            .appDestinations()
         }
+    }
+
+    private var weeklyChart: some View {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let activity = store.activityByDay
+        let days: [(date: Date, count: Int)] = (0..<14).reversed().map { offset in
+            let day = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
+            return (day, activity[day] ?? 0)
+        }
+        let total = days.reduce(0) { $0 + $1.count }
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SectionHeader("Last 14 days", icon: "chart.bar.xaxis")
+                Text("\(total) solved")
+                    .font(.caption.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+            Chart(days, id: \.date) { day in
+                BarMark(
+                    x: .value("Day", day.date, unit: .day),
+                    y: .value("Solved", day.count)
+                )
+                .foregroundStyle(day.date == today ? AnyShapeStyle(Theme.brandGradient) : AnyShapeStyle(Theme.accent.opacity(0.55)))
+                .cornerRadius(4)
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+                    AxisValueLabel(format: .dateTime.weekday(.narrow))
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in
+                    AxisGridLine()
+                    AxisValueLabel()
+                }
+            }
+            .chartYScale(domain: 0...max(3, days.map(\.count).max() ?? 0))
+            .frame(height: 140)
+        }
+        .card()
     }
 
     private var overviewCard: some View {
@@ -170,6 +215,7 @@ private struct StatTile: View {
         VStack(alignment: .leading, spacing: 6) {
             Image(systemName: icon)
                 .foregroundStyle(color)
+                .frame(height: 22)
             Text(value)
                 .font(.title2.weight(.bold).monospacedDigit())
                 .contentTransition(.numericText())

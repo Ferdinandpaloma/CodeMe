@@ -28,6 +28,11 @@ struct TopicDetailView: View {
                 }
                 .card()
 
+                NavigationLink(value: topic.lesson) {
+                    LessonCard(lesson: topic.lesson)
+                }
+                .buttonStyle(PressableStyle())
+
                 VStack(alignment: .leading, spacing: 12) {
                     SectionHeader("Spot the pattern", icon: "eye")
                     ForEach(topic.signals, id: \.self) { signal in

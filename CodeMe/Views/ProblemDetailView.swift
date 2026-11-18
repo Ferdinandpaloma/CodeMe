@@ -9,6 +9,13 @@ struct ProblemDetailView: View {
     @State private var solutionRevealed = false
     @State private var showSolutionSheet = false
     @State private var confirmReset = false
+    @State private var showWalkthrough = false
+    @State private var noteDraft = ""
+    @FocusState private var noteFocused: Bool
+
+    @AppStorage(SettingsKey.lockSolutions) private var lockSolutions = true
+    @AppStorage(SettingsKey.editorFontSize) private var fontSize = SettingsKey.defaultFontSize
+    @AppStorage(SettingsKey.autoPair) private var autoPair = true
 
     enum DetailTab: String, CaseIterable, Identifiable {
         case problem = "Problem"
@@ -60,6 +67,11 @@ struct ProblemDetailView: View {
             if tab != .code { solveBar }
         }
         .sensoryFeedback(.success, trigger: store.isSolved(problem)) { old, new in !old && new }
+        .fullScreenCover(isPresented: $showWalkthrough) {
+            if let walkthrough = Walkthroughs.make(for: problem) {
+                WalkthroughView(problem: problem, walkthrough: walkthrough)
+            }
+        }
     }
 
     // MARK: Problem tab
@@ -102,6 +114,52 @@ struct ProblemDetailView: View {
             }
 
             hintsSection
+            notesSection
+            relatedSection
+        }
+    }
+
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionHeader("My notes", icon: "note.text")
+                if noteFocused {
+                    Button("Save") { noteFocused = false }
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
+            TextField("Write down the trick, edge cases, or where you got stuck…", text: $noteDraft, axis: .vertical)
+                .lineLimit(3...12)
+                .font(.subheadline)
+                .focused($noteFocused)
+                .padding(12)
+                .background(Theme.elevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .card()
+        .onAppear { noteDraft = store.note(for: problem) }
+        .onChange(of: noteFocused) { _, focused in
+            if !focused { store.saveNote(noteDraft, for: problem) }
+        }
+        .onDisappear { store.saveNote(noteDraft, for: problem) }
+    }
+
+    private var relatedSection: some View {
+        let related = ProblemBank.problems(for: problem.topic).filter { $0 != problem }.prefix(3)
+        return Group {
+            if !related.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    SectionHeader("More \(problem.topic.shortName)", icon: "square.stack.3d.up")
+                        .padding(.bottom, 6)
+                    ForEach(Array(related)) { other in
+                        NavigationLink(value: other) {
+                            ProblemRow(problem: other)
+                                .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .card()
+            }
         }
     }
 
@@ -142,10 +200,42 @@ struct ProblemDetailView: View {
 
     // MARK: Solution tab
 
-    private var isSolutionLocked: Bool { !solutionRevealed && !store.isSolved(problem) }
+    private var isSolutionLocked: Bool { lockSolutions && !solutionRevealed && !store.isSolved(problem) }
 
     private var solutionTab: some View {
         VStack(alignment: .leading, spacing: 20) {
+            if let insight = problem.insight {
+                InsightCard(text: insight)
+            }
+
+            if Walkthroughs.available.contains(problem.id) {
+                Button {
+                    showWalkthrough = true
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "play.rectangle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white)
+                            .frame(width: 48, height: 48)
+                            .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Visual walkthrough")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text("Watch the algorithm run step by step on an example")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.bold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .card(padding: 14)
+                }
+                .buttonStyle(PressableStyle())
+            }
+
             HStack(spacing: 12) {
                 ComplexityTile(icon: "clock.fill", title: "Time", value: problem.time, color: Theme.accent)
                 ComplexityTile(icon: "memorychip.fill", title: "Space", value: problem.space, color: Theme.accent2)
@@ -245,7 +335,7 @@ struct ProblemDetailView: View {
                 }
                 .foregroundStyle(CodeTheme.plain.opacity(0.85))
             }
-            CodeEditor(text: codeBinding)
+            CodeEditor(text: codeBinding, fontSize: fontSize, autoPair: autoPair)
         }
         .background(CodeTheme.background.ignoresSafeArea(edges: .bottom))
         .clipShape(UnevenRoundedRectangle(topLeadingRadius: 16, topTrailingRadius: 16, style: .continuous))

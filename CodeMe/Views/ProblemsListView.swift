@@ -5,6 +5,16 @@ struct ProblemsListView: View {
     @State private var search = ""
     @State private var difficulty: Difficulty?
     @State private var status: StatusFilter = .all
+    @State private var sort: SortOrder = .roadmap
+    @State private var path = NavigationPath()
+
+    enum SortOrder: String, CaseIterable, Identifiable {
+        case roadmap = "Roadmap"
+        case number = "Number"
+        case difficulty = "Difficulty"
+        case title = "Title"
+        var id: Self { self }
+    }
 
     enum StatusFilter: String, CaseIterable, Identifiable {
         case all = "All"
@@ -31,8 +41,17 @@ struct ProblemsListView: View {
         }
     }
 
+    private func sorted(_ items: [Problem]) -> [Problem] {
+        switch sort {
+        case .roadmap: items
+        case .number: items.sorted { $0.number < $1.number }
+        case .difficulty: items.sorted { (Difficulty.allCases.firstIndex(of: $0.difficulty)!, $0.number) < (Difficulty.allCases.firstIndex(of: $1.difficulty)!, $1.number) }
+        case .title: items.sorted { $0.title.localizedCompare($1.title) == .orderedAscending }
+        }
+    }
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             let results = filtered
             List {
                 Section {
@@ -41,7 +60,22 @@ struct ProblemsListView: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
 
-                ForEach(Topic.allCases) { topic in
+                if sort != .roadmap {
+                    Section {
+                        ForEach(sorted(results)) { problem in
+                            NavigationLink(value: problem) {
+                                ProblemRow(problem: problem)
+                            }
+                            .listRowBackground(Theme.card)
+                        }
+                    } header: {
+                        Text("\(results.count) problems · by \(sort.rawValue.lowercased())")
+                            .font(.footnote.weight(.semibold))
+                            .textCase(nil)
+                    }
+                }
+
+                ForEach(sort == .roadmap ? Topic.allCases : []) { topic in
                     let items = results.filter { $0.topic == topic }
                     if !items.isEmpty {
                         Section {
@@ -85,6 +119,26 @@ struct ProblemsListView: View {
             .background(Theme.background.ignoresSafeArea())
             .searchable(text: $search, prompt: "Title, number, or topic")
             .navigationTitle("Problems")
+            .toolbar {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        let pool = results.filter { !store.isSolved($0) }
+                        if let pick = (pool.isEmpty ? results : pool).randomElement() { path.append(pick) }
+                    } label: {
+                        Image(systemName: "dice")
+                    }
+                    .accessibilityLabel("Random problem")
+                    .disabled(results.isEmpty)
+                    Menu {
+                        Picker("Sort by", selection: $sort.animation(.snappy)) {
+                            ForEach(SortOrder.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down.circle")
+                    }
+                    .accessibilityLabel("Sort")
+                }
+            }
             .appDestinations()
         }
     }
