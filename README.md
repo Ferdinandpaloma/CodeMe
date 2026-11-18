@@ -31,3 +31,18 @@ The project is generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen) 
 
 ## Adding problems
 Add a `Problem(...)` to one of the files in `CodeMe/Data/`. The starter code for the editor is generated automatically from the solution's method signatures.
+
+## Design system
+
+`CodeMe/Views/DesignSystem.swift` holds the visual foundations:
+
+- **OKLCH palettes:** every brand, semantic and topic colour is defined in OKLCH and rendered in Display P3. If a colour is out of gamut, only its chroma is reduced. Topic hues are spaced by the golden angle, and yellows get extra lightness.
+- **OKLCH gradients:** ramps are interpolated in OKLCH (`OKGradient`, `Color.oklchGradient`), so they don't turn grey or muddy in the middle.
+- **Concentric radii:** controls inside cards use `Radius.control`, and each container's radius is that value plus its padding (`Radius.outer`).
+- **Alpha borders:** hairlines are translucent black in light mode and translucent white in dark mode.
+- **Dark-mode depth:** surfaces get lighter at each elevation and have a lit top edge instead of shadows.
+- **Multiple blending:** `AuroraBackground` stacks `.screen`, `.plusLighter`, `.softLight` and `.multiply` layers. Secondary text on hero cards uses `.plusLighter` vibrancy.
+- **Masked edges:** `FadingScrollView` fades a horizontal edge only when there is more content to scroll to on that side.
+- **Blurred icon swaps:** `SwapIcon` blurs and scales between symbols when the state changes.
+- **Matched icon weights:** symbols use the same weight as the text next to them.
+- **Dynamic viewport:** sizes and grid columns are derived from the available width and Dynamic Type.

@@ -23,7 +23,7 @@ struct WalkthroughView: View {
                 ArrayStrip(step: step)
 
                 if !step.vars.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    FadingScrollView {
                         HStack(spacing: 8) {
                             ForEach(step.vars, id: \.name) { variable in
                                 HStack(spacing: 4) {
@@ -37,7 +37,7 @@ struct WalkthroughView: View {
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
                                 .background(Theme.card, in: Capsule())
-                                .overlay(Capsule().strokeBorder(Theme.stroke, lineWidth: 1))
+                                .overlay(Capsule().strokeBorder(Theme.stroke, lineWidth: 0.75))
                             }
                         }
                     }
@@ -125,12 +125,12 @@ struct WalkthroughView: View {
                     if isLast { index = 0 }
                     playing.toggle()
                 } label: {
-                    Image(systemName: playing ? "pause.fill" : (isLast ? "arrow.counterclockwise" : "play.fill"))
-                        .font(.title2)
+                    SwapIcon(playing ? "pause.fill" : (isLast ? "arrow.counterclockwise" : "play.fill"))
+                        .font(.title2.weight(.bold))
                         .foregroundStyle(.white)
                         .frame(width: 64, height: 64)
                         .background(Theme.brandGradient, in: Circle())
-                        .contentTransition(.symbolEffect(.replace))
+                        .overlay(Circle().strokeBorder(.white.opacity(0.25), lineWidth: 0.75).blendMode(.plusLighter))
                 }
                 .buttonStyle(PressableStyle())
                 controlButton("forward.fill", enabled: !isLast) {
@@ -151,7 +151,7 @@ struct WalkthroughView: View {
                 .font(.headline)
                 .frame(width: 46, height: 46)
                 .background(Theme.card, in: Circle())
-                .overlay(Circle().strokeBorder(Theme.stroke, lineWidth: 1))
+                .overlay(Circle().strokeBorder(Theme.stroke, lineWidth: 0.75))
         }
         .buttonStyle(PressableStyle())
         .disabled(!enabled)
@@ -217,9 +217,9 @@ private struct ArrayStrip: View {
     private func color(for label: String) -> Color {
         switch label {
         case "l", "buy", "j": Theme.accent
-        case "r", "i", "day", "sell", "c": Color(hex: 0x0EA5E9)
+        case "r", "i", "day", "sell", "c": Palette.sky.color
         case "mid": Theme.medium
-        default: Color(hex: 0xEC4899)
+        default: Palette.pink.color
         }
     }
 }
@@ -233,7 +233,7 @@ private struct PanelView: View {
                 .font(.caption2.weight(.bold))
                 .tracking(0.8)
                 .foregroundStyle(.secondary)
-            ScrollView(.horizontal, showsIndicators: false) {
+            FadingScrollView {
                 HStack(spacing: 6) {
                     if panel.items.isEmpty {
                         Text("empty")
@@ -246,8 +246,8 @@ private struct PanelView: View {
                             .font(.footnote.monospaced().weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(Theme.accent2.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.accent2.opacity(0.4), lineWidth: 1))
+                            .background(Theme.accent2.opacity(0.14), in: RoundedRectangle(cornerRadius: Radius.small, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.small, style: .continuous).strokeBorder(Theme.accent2.opacity(0.4), lineWidth: 1))
                             .transition(.scale.combined(with: .opacity))
                     }
                 }

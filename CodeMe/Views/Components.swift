@@ -24,16 +24,26 @@ extension Color {
 }
 
 enum Theme {
-    static let accent = Color(hex: 0x7C5CFF)
-    static let accent2 = Color(hex: 0x22D3EE)
-    static let brandGradient = LinearGradient(colors: [accent, Color(hex: 0x5B8CFF), accent2], startPoint: .topLeading, endPoint: .bottomTrailing)
-    static let background = Color(light: 0xF3F4F9, dark: 0x0A0B10)
-    static let card = Color(light: 0xFFFFFF, dark: 0x14161F)
-    static let elevated = Color(light: 0xEEF0F6, dark: 0x1C1F2B)
-    static let stroke = Color(light: 0xE4E6EE, dark: 0x232736)
-    static let easy = Color(hex: 0x22C55E)
-    static let medium = Color(hex: 0xF59E0B)
-    static let hard = Color(hex: 0xEF4444)
+    // Brand & semantic colours, all in OKLCH (see DesignSystem.swift).
+    static let accent = Palette.violet.color
+    static let accent2 = Palette.cyan.color
+    static let brandStops = [Palette.violet, Palette.blue, Palette.cyan]
+    static let brandGradient = OKGradient.linear(brandStops)
+    /// Deeper ramp for hero surfaces that carry white text (keeps contrast at the cyan end).
+    static let heroStops = [Palette.violet, Palette.blue.adjusting(l: -0.04), Palette.sky.adjusting(l: -0.08, c: 0.01)]
+    static let easy = Palette.green.color
+    static let medium = Palette.amber.color
+    static let hard = Palette.red.color
+    /// Yellow is too light for text on white, so light mode uses a deeper amber at the same hue.
+    static let insight = Color(light: OKLCH(0.60, 0.13, 80), dark: Palette.yellow)
+
+    // Neutrals carry a whisper of the brand hue. In dark mode each elevation step is
+    // lighter (depth through luminance), in light mode surfaces sit on a cool grey canvas.
+    static let background = Color(light: OKLCH(0.972, 0.006, 280), dark: OKLCH(0.135, 0.012, 280))
+    static let card = Color(light: OKLCH(1.0, 0, 0), dark: OKLCH(0.19, 0.015, 280))
+    static let elevated = Color(light: OKLCH(0.955, 0.008, 280), dark: OKLCH(0.245, 0.018, 280))
+    /// Translucent hairline: black in light mode, white in dark, so it tints with what's behind.
+    static let stroke = Color(light: OKLCH(0, 0, 0, alpha: 0.09), dark: OKLCH(1, 0, 0, alpha: 0.10))
 }
 
 // MARK: - Card
@@ -45,8 +55,8 @@ struct CardModifier: ViewModifier {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 1))
+            // Concentric: controls inside use Radius.control, so the card is control + padding.
+            .surface(radius: Radius.outer(padding: padding))
     }
 }
 
@@ -91,7 +101,8 @@ struct TopicIcon: View {
             .font(.system(size: size * 0.42, weight: .semibold))
             .foregroundStyle(.white)
             .frame(width: size, height: size)
-            .background(topic.color.gradient, in: RoundedRectangle(cornerRadius: size * 0.3, style: .continuous))
+            .background(topic.color.oklchGradient, in: .rounded(size * 0.3))
+            .overlay(RoundedRectangle(cornerRadius: size * 0.3, style: .continuous).strokeBorder(.white.opacity(0.18), lineWidth: 0.5).blendMode(.plusLighter))
     }
 }
 
@@ -105,7 +116,7 @@ struct ProgressBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.primary.opacity(0.08))
                 Capsule()
-                    .fill(color.gradient)
+                    .fill(color.oklchGradient)
                     .frame(width: max(progress > 0 ? height : 0, geo.size.width * min(max(progress, 0), 1)))
             }
         }
@@ -119,7 +130,7 @@ struct ProgressRing: View {
     var lineWidth: CGFloat = 10
     var track: Color = Color.primary.opacity(0.08)
     var fill: AnyShapeStyle = AnyShapeStyle(
-        AngularGradient(colors: [Theme.accent, Theme.accent2, Theme.accent], center: .center)
+        OKGradient.angular(Theme.brandStops)
     )
 
     var body: some View {
@@ -181,10 +192,9 @@ struct ProblemRow: View {
     var body: some View {
         let solved = store.isSolved(problem)
         HStack(spacing: 12) {
-            Image(systemName: solved ? "checkmark.circle.fill" : "circle")
-                .font(.title3)
+            SwapIcon(solved ? "checkmark.circle.fill" : "circle")
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(solved ? Theme.easy : Color.secondary.opacity(0.45))
-                .contentTransition(.symbolEffect(.replace))
             VStack(alignment: .leading, spacing: 3) {
                 Text(problem.title)
                     .font(.subheadline.weight(.semibold))
@@ -196,7 +206,7 @@ struct ProblemRow: View {
             }
             Spacer(minLength: 8)
             if store.isStarred(problem) {
-                Image(systemName: "star.fill").font(.caption).foregroundStyle(.yellow)
+                Image(systemName: "star.fill").font(.caption.weight(.semibold)).foregroundStyle(Palette.yellow.color)
             }
             DifficultyPill(difficulty: problem.difficulty)
         }
@@ -217,8 +227,8 @@ struct FilterChip: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .foregroundStyle(isOn ? .white : .primary)
-                .background(isOn ? AnyShapeStyle(color.gradient) : AnyShapeStyle(Theme.card), in: Capsule())
-                .overlay(Capsule().strokeBorder(isOn ? .clear : Theme.stroke, lineWidth: 1))
+                .background(isOn ? AnyShapeStyle(color.oklchGradient) : AnyShapeStyle(Theme.card), in: Capsule())
+                .overlay(Capsule().strokeBorder(isOn ? AnyShapeStyle(.white.opacity(0.2)) : AnyShapeStyle(Theme.stroke), lineWidth: 0.75))
         }
         .buttonStyle(.plain)
         .animation(.snappy, value: isOn)

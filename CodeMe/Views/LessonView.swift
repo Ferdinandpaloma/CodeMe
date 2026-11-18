@@ -28,7 +28,7 @@ struct LessonView: View {
             HStack(spacing: 4) {
                 ForEach(0..<pageCount, id: \.self) { index in
                     Capsule()
-                        .fill(index <= page ? AnyShapeStyle(lesson.color.gradient) : AnyShapeStyle(Color.primary.opacity(0.1)))
+                        .fill(index <= page ? AnyShapeStyle(lesson.color.oklchGradient) : AnyShapeStyle(Color.primary.opacity(0.1)))
                         .frame(height: 4)
                 }
             }
@@ -113,8 +113,8 @@ struct LessonView: View {
                             Spacer(minLength: 0)
                         }
                         .padding(12)
-                        .background(state.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(state.border, lineWidth: state == .correct || state == .wrong ? 2 : 1))
+                        .background(state.background, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.control, style: .continuous).strokeBorder(state.border, lineWidth: state == .correct || state == .wrong ? 2 : 1))
                         .opacity(state == .dimmed ? 0.5 : 1)
                     }
                     .buttonStyle(PressableStyle())
@@ -144,8 +144,8 @@ struct LessonView: View {
     private var finishPage: some View {
         VStack(spacing: 18) {
             Image(systemName: "graduationcap.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(lesson.color.gradient)
+                .font(.system(size: 56, weight: .semibold))
+                .foregroundStyle(lesson.color.oklchGradient)
                 .padding(26)
                 .background(lesson.color.opacity(0.12), in: Circle())
                 .symbolEffect(.bounce, value: isFinish)
@@ -175,8 +175,7 @@ struct LessonView: View {
                     Image(systemName: "chevron.left")
                         .font(.headline)
                         .frame(width: 54, height: 52)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 1))
+                        .surface(radius: Radius.control + 2)
                 }
                 .buttonStyle(PressableStyle())
             }
@@ -192,7 +191,7 @@ struct LessonView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
-                    .background(lesson.color.gradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(lesson.color.oklchGradient, in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous))
                     .opacity(canContinue ? 1 : 0.45)
             }
             .buttonStyle(PressableStyle())
@@ -242,8 +241,8 @@ struct LessonCard: View {
         let done = store.isComplete(lesson)
         HStack(spacing: 14) {
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(lesson.color.gradient)
+                RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                    .fill(lesson.color.oklchGradient)
                 Image(systemName: "book.fill")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.white)
@@ -265,7 +264,7 @@ struct LessonCard: View {
             Spacer(minLength: 8)
             if done {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.title2)
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(Theme.easy)
             } else {
                 Text("Start")
@@ -273,7 +272,7 @@ struct LessonCard: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)
-                    .background(lesson.color.gradient, in: Capsule())
+                    .background(lesson.color.oklchGradient, in: Capsule())
             }
         }
         .card(padding: 14)

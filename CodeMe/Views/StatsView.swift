@@ -3,6 +3,7 @@ import Charts
 
 struct StatsView: View {
     @Environment(ProgressStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var dynamicType
     @State private var showSettings = false
 
     var body: some View {
@@ -10,14 +11,13 @@ struct StatsView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     overviewCard
-                    HStack(spacing: 10) {
-                        StatTile(icon: "flame.fill", value: "\(store.currentStreak)", label: "Day streak", color: .orange)
+                    // Tiles reflow with the viewport and Dynamic Type: 3 across normally, 2 at accessibility sizes.
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicType.isAccessibilitySize ? 150 : 100), spacing: 10)], spacing: 10) {
+                        StatTile(icon: "flame.fill", value: "\(store.currentStreak)", label: "Day streak", color: Palette.orange.color)
                         StatTile(icon: "calendar", value: "\(store.activeDays)", label: "Active days", color: Theme.accent2)
-                        StatTile(icon: "star.fill", value: "\(store.starred.count)", label: "Starred", color: .yellow)
-                    }
-                    HStack(spacing: 10) {
+                        StatTile(icon: "star.fill", value: "\(store.starred.count)", label: "Starred", color: Palette.yellow.color)
                         StatTile(icon: "arrow.triangle.2.circlepath", value: "\(store.totalReviews)", label: "Reviews", color: Theme.accent)
-                        StatTile(icon: "book.fill", value: "\(store.completedLessons.count)", label: "Lessons", color: Color(hex: 0x6366F1))
+                        StatTile(icon: "book.fill", value: "\(store.completedLessons.count)", label: "Lessons", color: Palette.indigo.color)
                         StatTile(icon: "timer", value: "\(store.interviews.count)", label: "Interviews", color: Theme.medium)
                     }
                     weeklyChart
@@ -68,7 +68,9 @@ struct StatsView: View {
                     x: .value("Day", day.date, unit: .day),
                     y: .value("Solved", day.count)
                 )
-                .foregroundStyle(day.date == today ? AnyShapeStyle(Theme.brandGradient) : AnyShapeStyle(Theme.accent.opacity(0.55)))
+                .foregroundStyle(day.date == today
+                    ? AnyShapeStyle(OKGradient.linear(Theme.brandStops.reversed(), start: .bottom, end: .top))
+                    : AnyShapeStyle(Theme.accent.opacity(0.5)))
                 .cornerRadius(4)
             }
             .chartXAxis {
@@ -213,7 +215,9 @@ private struct StatTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            // Icon weight matches the bold value beneath it.
             Image(systemName: icon)
+                .font(.headline.weight(.semibold))
                 .foregroundStyle(color)
                 .frame(height: 22)
             Text(value)

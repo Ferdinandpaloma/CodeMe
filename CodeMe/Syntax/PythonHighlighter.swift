@@ -9,7 +9,8 @@ enum TokenKind {
 enum CodeTheme {
     static let background = Color(hex: 0x0F111A)
     static let header = Color(hex: 0x161925)
-    static let border = Color(hex: 0x23263A)
+    /// Translucent hairline so the code surface edge picks up whatever is behind it.
+    static let border = Color.white.opacity(0.10)
     static let plain = Color(hex: 0xC8D3F5)
     static let lineNumber = Color(hex: 0x4B5270)
     static let uiBackground = UIColor(hex: 0x0F111A)

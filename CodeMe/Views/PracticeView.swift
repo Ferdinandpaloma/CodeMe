@@ -33,19 +33,19 @@ struct PracticeView: View {
                     NavigationLink(value: PracticeRoute.quiz(.complexity)) {
                         ModeCard(icon: "speedometer", title: "Complexity Quiz",
                                  subtitle: "Read a Python solution and pick its time complexity.",
-                                 color: Color(hex: 0xF472B6))
+                                 color: Palette.pink.color)
                     }
                     .buttonStyle(PressableStyle())
                     NavigationLink(value: PracticeRoute.drill(.fillBlank)) {
                         ModeCard(icon: "rectangle.and.pencil.and.ellipsis", title: "Fill the Blank",
                                  subtitle: "A line is missing from a solution. Pick the one that belongs.",
-                                 color: Color(hex: 0x84CC16))
+                                 color: Palette.lime.color)
                     }
                     .buttonStyle(PressableStyle())
                     NavigationLink(value: PracticeRoute.drill(.lineOrder)) {
                         ModeCard(icon: "text.line.first.and.arrowtriangle.forward", title: "Line Order",
                                  subtitle: "Rebuild a scrambled solution line by line.",
-                                 color: Color(hex: 0xF97316))
+                                 color: Palette.orange.color)
                     }
                     .buttonStyle(PressableStyle())
 
@@ -98,19 +98,19 @@ struct PracticeView: View {
                     Text("DAILY REVIEW")
                         .font(.caption.weight(.bold))
                         .tracking(1.2)
-                        .opacity(0.8)
+                        .vibrant(0.75)
                     Text(due == 0 ? "All caught up" : "\(due) problem\(due == 1 ? "" : "s") due")
                         .font(.title2.weight(.bold))
                         .contentTransition(.numericText())
                     Text(reviewSubtitle(due: due))
                         .font(.subheadline)
-                        .opacity(0.9)
+                        .vibrant(0.88)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 30, weight: .semibold))
-                    .opacity(0.9)
+                SwapIcon(due == 0 ? "checkmark.circle" : "arrow.triangle.2.circlepath")
+                    .font(.system(size: 30, weight: .bold))
+                    .vibrant(0.9)
             }
             if due > 0 {
                 NavigationLink(value: PracticeRoute.review) {
@@ -119,7 +119,7 @@ struct PracticeView: View {
                         .foregroundStyle(Theme.accent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(.white, in: .rounded(Radius.control))
                 }
                 .buttonStyle(PressableStyle())
             }
@@ -127,8 +127,14 @@ struct PracticeView: View {
         .foregroundStyle(.white)
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Theme.accent.opacity(0.3), radius: 16, y: 8)
+        .background(AuroraBackground(stops: Theme.heroStops))
+        .compositingGroup()
+        // Start button: control radius at 20pt inset -> concentric outer radius.
+        .clipShape(.rounded(Radius.outer(padding: 20)))
+        .overlay(RoundedRectangle(cornerRadius: Radius.outer(padding: 20), style: .continuous)
+            .strokeBorder(LinearGradient(colors: [.white.opacity(0.35), .white.opacity(0.05)], startPoint: .top, endPoint: .bottom), lineWidth: 0.75)
+            .blendMode(.plusLighter))
+        .shadow(color: Palette.violet.opacity(0.3).color, radius: 16, y: 8)
     }
 
     private var interviewCard: some View {
@@ -137,28 +143,30 @@ struct PracticeView: View {
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 52, height: 52)
-                .background(Color.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(Color.white.opacity(0.2), in: .rounded(Radius.control))
+                .overlay(RoundedRectangle(cornerRadius: Radius.control, style: .continuous).strokeBorder(.white.opacity(0.25), lineWidth: 0.5))
             VStack(alignment: .leading, spacing: 3) {
                 Text("MOCK INTERVIEW")
                     .font(.caption2.weight(.bold))
                     .tracking(1)
-                    .opacity(0.8)
+                    .vibrant(0.75)
                 Text("Timed, topic hidden")
                     .font(.headline)
                 Text(store.interviews.isEmpty ? "Practice under real pressure." : "\(store.interviews.count) done · \(store.interviews.filter(\.passed).count) passed")
                     .font(.caption)
-                    .opacity(0.85)
+                    .vibrant(0.85)
             }
             Spacer(minLength: 8)
-            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).opacity(0.7)
+            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).vibrant(0.7)
         }
         .foregroundStyle(.white)
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(colors: [Color(hex: 0xF97316), Color(hex: 0xEF4444), Color(hex: 0xEC4899)], startPoint: .topLeading, endPoint: .bottomTrailing),
-            in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-        )
+        .background(AuroraBackground(stops: [Palette.orange, Palette.red, Palette.pink], glow: Palette.amber))
+        .compositingGroup()
+        .clipShape(.rounded(Radius.outer(padding: 16)))
+        .overlay(RoundedRectangle(cornerRadius: Radius.outer(padding: 16), style: .continuous)
+            .strokeBorder(.white.opacity(0.2), lineWidth: 0.75).blendMode(.plusLighter))
     }
 
     private func reviewSubtitle(due: Int) -> String {
@@ -184,7 +192,7 @@ private struct ModeCard: View {
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 48, height: 48)
-                .background(color.gradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(color.oklchGradient, in: .rounded(Radius.control))
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.headline)
@@ -315,7 +323,7 @@ struct ReviewSessionView: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 10)
-                                .background(gradeColor(grade).gradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .background(gradeColor(grade).oklchGradient, in: .rounded(Radius.control))
                             }
                             .buttonStyle(PressableStyle())
                         }
@@ -330,7 +338,7 @@ struct ReviewSessionView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandGradient, in: .rounded(Radius.control + 2))
                 }
                 .buttonStyle(PressableStyle())
             }
@@ -345,8 +353,8 @@ struct ReviewSessionView: View {
         VStack(spacing: 16) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(Theme.easy.gradient)
+                .font(.system(size: 64, weight: .semibold))
+                .foregroundStyle(Theme.easy.oklchGradient)
                 .symbolEffect(.bounce, value: started)
             Text(reviewedCount > 0 ? "Review complete!" : "Nothing due right now")
                 .font(.title2.weight(.bold))
@@ -381,7 +389,7 @@ struct ReviewSessionView: View {
         case .again: Theme.hard
         case .hard: Theme.medium
         case .good: Theme.easy
-        case .easy: Color(hex: 0x0EA5E9)
+        case .easy: Palette.sky.color
         }
     }
 }
@@ -403,13 +411,13 @@ struct InsightCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "lightbulb.max.fill")
-                .font(.title3)
-                .foregroundStyle(.yellow)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Theme.insight)
             VStack(alignment: .leading, spacing: 4) {
                 Text("KEY INSIGHT")
                     .font(.caption2.weight(.bold))
                     .tracking(1)
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(Theme.insight)
                 MarkdownText(text)
                     .font(.subheadline.weight(.medium))
                     .fixedSize(horizontal: false, vertical: true)
@@ -418,7 +426,7 @@ struct InsightCard: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.yellow.opacity(0.1), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.yellow.opacity(0.35), lineWidth: 1))
+        .background(Palette.yellow.color.opacity(0.12), in: .rounded(Radius.outer(padding: 14)))
+        .overlay(RoundedRectangle(cornerRadius: Radius.outer(padding: 14), style: .continuous).strokeBorder(Palette.yellow.opacity(0.4).color, lineWidth: 0.75))
     }
 }

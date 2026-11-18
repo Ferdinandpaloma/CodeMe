@@ -23,9 +23,12 @@ struct CodeBlockView: View {
                         withAnimation(.snappy) { copied = false }
                     }
                 } label: {
-                    Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
-                        .font(.caption.weight(.semibold))
-                        .contentTransition(.symbolEffect(.replace))
+                    HStack(spacing: 4) {
+                        SwapIcon(copied ? "checkmark" : "doc.on.doc")
+                        Text(copied ? "Copied" : "Copy")
+                            .contentTransition(.interpolate)
+                    }
+                    .font(.caption.weight(.semibold))
                 }
                 .foregroundStyle(copied ? Theme.easy : CodeTheme.plain.opacity(0.75))
                 .sensoryFeedback(.success, trigger: copied) { _, new in new }
@@ -43,7 +46,7 @@ struct CodeBlockView: View {
                 .padding(.leading, 12)
                 .padding(.trailing, 8)
 
-                ScrollView(.horizontal, showsIndicators: false) {
+                FadingScrollView {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(lines.indices, id: \.self) { index in
                             Text(lines[index])
@@ -51,7 +54,7 @@ struct CodeBlockView: View {
                                 .padding(.horizontal, 4)
                                 .background(
                                     index + 1 == highlightedLine ? Theme.accent.opacity(0.35) : .clear,
-                                    in: RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    in: .rounded(4)
                                 )
                                 .id(index + 1)
                         }
@@ -63,8 +66,9 @@ struct CodeBlockView: View {
             .padding(.vertical, 14)
         }
         .background(CodeTheme.background)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(CodeTheme.border, lineWidth: 1))
+        .clipShape(.rounded(Radius.outer(inner: 4, padding: 14)))
+        .overlay(RoundedRectangle(cornerRadius: Radius.outer(inner: 4, padding: 14), style: .continuous)
+            .strokeBorder(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.06)], startPoint: .top, endPoint: .bottom), lineWidth: 0.75))
         .environment(\.colorScheme, .dark)
     }
 }

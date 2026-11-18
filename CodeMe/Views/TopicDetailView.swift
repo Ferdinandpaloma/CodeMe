@@ -38,7 +38,7 @@ struct TopicDetailView: View {
                     ForEach(topic.signals, id: \.self) { signal in
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Image(systemName: "sparkle")
-                                .font(.caption)
+                                .font(.caption.weight(.semibold))
                                 .foregroundStyle(topic.color)
                             MarkdownText(signal)
                                 .font(.subheadline)

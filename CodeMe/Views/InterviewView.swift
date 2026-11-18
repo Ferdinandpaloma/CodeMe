@@ -77,20 +77,25 @@ struct InterviewSetupView: View {
                                 .font(.headline)
                                 .foregroundStyle(.white)
                                 .frame(width: 44, height: 44)
-                                .background(option.color.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .background(option.color.oklchGradient, in: .rounded(Radius.control))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(option.title).font(.headline).foregroundStyle(.primary)
                                 Text(option.subtitle).font(.caption).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Image(systemName: format == option ? "checkmark.circle.fill" : "circle")
-                                .font(.title3)
+                            SwapIcon(format == option ? "checkmark.circle.fill" : "circle")
+                                .font(.title3.weight(.semibold))
                                 .foregroundStyle(format == option ? Theme.accent : Color.secondary.opacity(0.4))
                         }
                         .padding(14)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(format == option ? Theme.accent : Theme.stroke, lineWidth: format == option ? 2 : 1))
+                        .surface(radius: Radius.outer(padding: 14))
+                        .overlay {
+                            if format == option {
+                                RoundedRectangle(cornerRadius: Radius.outer(padding: 14), style: .continuous)
+                                    .strokeBorder(Theme.accent, lineWidth: 2)
+                                    .transition(.opacity)
+                            }
+                        }
                     }
                     .buttonStyle(PressableStyle())
                 }
@@ -114,7 +119,7 @@ struct InterviewSetupView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandGradient, in: .rounded(Radius.control + 2))
                 }
                 .buttonStyle(PressableStyle())
 
@@ -169,7 +174,7 @@ private struct InterviewHistoryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: record.passed ? "checkmark.seal.fill" : "xmark.seal")
-                .font(.title3)
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(record.passed ? Theme.easy : Color.secondary)
             VStack(alignment: .leading, spacing: 3) {
                 Text(record.problems.map(\.title).joined(separator: " · "))
@@ -274,15 +279,17 @@ private struct InterviewSessionView: View {
                                 withAnimation(.snappy) { current = index }
                             } label: {
                                 HStack(spacing: 6) {
-                                    Image(systemName: solved.contains(item.id) ? "checkmark.circle.fill" : "\(index + 1).circle")
+                                    SwapIcon(solved.contains(item.id) ? "checkmark.circle.fill" : "\(index + 1).circle")
                                     Text(item.difficulty.rawValue)
                                 }
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                                 .foregroundStyle(current == index ? .white : .primary)
-                                .background(current == index ? AnyShapeStyle(item.difficulty.color.gradient) : AnyShapeStyle(Theme.card),
-                                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .background(current == index ? AnyShapeStyle(item.difficulty.color.oklchGradient) : AnyShapeStyle(Theme.card),
+                                            in: .rounded(Radius.control))
+                                .overlay(RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                                    .strokeBorder(current == index ? AnyShapeStyle(.white.opacity(0.2)) : AnyShapeStyle(Theme.stroke), lineWidth: 0.75))
                             }
                             .buttonStyle(.plain)
                         }
@@ -340,7 +347,7 @@ private struct InterviewSessionView: View {
                         .font(.callout.monospaced())
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.elevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(Theme.elevated, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 }
             }
             if !problem.constraints.isEmpty {
@@ -356,11 +363,11 @@ private struct InterviewSessionView: View {
                 Label {
                     MarkdownText(problem.hints[index]).font(.subheadline)
                 } icon: {
-                    Image(systemName: "lightbulb.fill").foregroundStyle(.yellow)
+                    Image(systemName: "lightbulb.fill").foregroundStyle(Theme.insight)
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.yellow.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Palette.yellow.color.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
             }
             if shown < problem.hints.count {
                 Button {
@@ -380,13 +387,16 @@ private struct InterviewSessionView: View {
             Button {
                 withAnimation(.spring) { toggleSolved() }
             } label: {
-                Label(isSolved ? "Solved" : "I solved it", systemImage: isSolved ? "checkmark.seal.fill" : "checkmark.circle")
+                HStack(spacing: 8) {
+                    SwapIcon(isSolved ? "checkmark.seal.fill" : "checkmark.circle")
+                    Text(isSolved ? "Solved" : "I solved it")
+                }
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .foregroundStyle(isSolved ? Theme.easy : .white)
                     .background(isSolved ? AnyShapeStyle(Theme.easy.opacity(0.15)) : AnyShapeStyle(Theme.brandGradient),
-                                in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous))
             }
             .buttonStyle(PressableStyle())
             Button {
@@ -395,7 +405,7 @@ private struct InterviewSessionView: View {
                 Image(systemName: "keyboard")
                     .font(.headline)
                     .frame(width: 54, height: 50)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous))
             }
             .buttonStyle(PressableStyle())
         }
@@ -448,8 +458,8 @@ private struct InterviewSummaryView: View {
             VStack(spacing: 18) {
                 VStack(spacing: 10) {
                     Image(systemName: passed ? "trophy.fill" : "figure.walk.motion")
-                        .font(.system(size: 56))
-                        .foregroundStyle(passed ? AnyShapeStyle(Color.yellow.gradient) : AnyShapeStyle(Theme.brandGradient))
+                        .font(.system(size: 56, weight: .semibold))
+                        .foregroundStyle(passed ? AnyShapeStyle(Palette.yellow.color.oklchGradient) : AnyShapeStyle(Theme.brandGradient))
                         .symbolEffect(.bounce, value: passed)
                     Text(passed ? "Strong hire!" : "Good practice")
                         .font(.title.weight(.bold))
@@ -463,7 +473,7 @@ private struct InterviewSummaryView: View {
                 HStack(spacing: 10) {
                     tile("Solved", "\(solved.count)/\(session.problems.count)", "checkmark.circle.fill", Theme.easy)
                     tile("Time", InterviewClock.format(seconds), "timer", seconds > session.limit ? Theme.hard : Theme.accent)
-                    tile("Hints", "\(hintsUsed)", "lightbulb.fill", .yellow)
+                    tile("Hints", "\(hintsUsed)", "lightbulb.fill", Theme.insight)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -472,6 +482,7 @@ private struct InterviewSummaryView: View {
                         NavigationLink(value: problem) {
                             HStack(spacing: 12) {
                                 Image(systemName: solved.contains(problem.id) ? "checkmark.circle.fill" : "xmark.circle")
+                                    .fontWeight(.semibold)
                                     .foregroundStyle(solved.contains(problem.id) ? Theme.easy : Theme.hard)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(problem.title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
@@ -495,7 +506,7 @@ private struct InterviewSummaryView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous))
                 }
                 .buttonStyle(PressableStyle())
             }

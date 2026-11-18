@@ -168,8 +168,8 @@ struct QuizView: View {
             }
             .font(.title3)
             .padding(12)
-            .background(state.background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(state.border, lineWidth: state == .idle || state == .dimmed ? 1 : 2))
+            .background(state.background, in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous).strokeBorder(state.border, lineWidth: state == .idle || state == .dimmed ? 1 : 2))
             .opacity(state == .dimmed ? 0.5 : 1)
         }
         .buttonStyle(PressableStyle())
@@ -198,7 +198,7 @@ struct QuizView: View {
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Theme.elevated, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Theme.elevated, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 Button {
@@ -209,7 +209,7 @@ struct QuizView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 }
                 .buttonStyle(PressableStyle())
             }

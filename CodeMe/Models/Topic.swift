@@ -92,13 +92,7 @@ enum Topic: String, CaseIterable, Identifiable, Hashable {
     }
 
     var color: Color {
-        let palette: [UInt32] = [
-            0x7C5CFF, 0x22D3EE, 0xF472B6, 0x34D399, 0xFB923C, 0x60A5FA,
-            0x22C55E, 0xA78BFA, 0xF59E0B, 0xEF4444, 0x06B6D4, 0x8B5CF6,
-            0x0EA5E9, 0xEC4899, 0x14B8A6, 0xF97316, 0xEAB308, 0x6366F1,
-        ]
-        let index = Topic.allCases.firstIndex(of: self) ?? 0
-        return Color(hex: palette[index % palette.count])
+        Palette.topic(Topic.allCases.firstIndex(of: self) ?? 0).color
     }
 
     var summary: String {

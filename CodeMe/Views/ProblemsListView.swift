@@ -150,7 +150,7 @@ struct ProblemsListView: View {
             }
             .pickerStyle(.segmented)
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            FadingScrollView {
                 HStack(spacing: 8) {
                     FilterChip(title: "All levels", isOn: difficulty == nil) {
                         withAnimation(.snappy) { difficulty = nil }

@@ -177,13 +177,17 @@ struct DrillView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
-                if state == .correct { Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.easy) }
-                if state == .wrong { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.hard) }
+                if state == .correct || state == .wrong {
+                    Image(systemName: state == .correct ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(state == .correct ? Theme.easy : Theme.hard)
+                        .transition(.blurReplace)
+                }
             }
             .padding(12)
-            .background(CodeTheme.background, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(state == .correct ? Theme.easy : state == .wrong ? Theme.hard : CodeTheme.border, lineWidth: state == .idle || state == .dimmed ? 1 : 2))
+            .background(CodeTheme.background, in: .rounded(Radius.outer(inner: 2, padding: 12)))
+            .overlay(RoundedRectangle(cornerRadius: Radius.outer(inner: 2, padding: 12), style: .continuous)
+                .strokeBorder(state == .correct ? Theme.easy : state == .wrong ? Theme.hard : CodeTheme.border, lineWidth: state == .idle || state == .dimmed ? 0.75 : 2))
             .opacity(state == .dimmed ? 0.45 : 1)
             .environment(\.colorScheme, .dark)
         }
@@ -200,7 +204,7 @@ struct DrillView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            FadingScrollView {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(parts?.header ?? [], id: \.self) { line in
                         codeLine(line.text)
@@ -232,7 +236,8 @@ struct DrillView: View {
                 .padding(14)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(CodeTheme.background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(CodeTheme.background, in: .rounded(Radius.outer(inner: 6, padding: 14)))
+            .overlay(RoundedRectangle(cornerRadius: Radius.outer(inner: 6, padding: 14), style: .continuous).strokeBorder(CodeTheme.border, lineWidth: 0.75))
             .environment(\.colorScheme, .dark)
 
             if !pool.isEmpty {
@@ -259,7 +264,7 @@ struct DrillView: View {
                                 .padding(10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(CodeTheme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(CodeTheme.border, lineWidth: 1))
+                                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(CodeTheme.border, lineWidth: 0.75))
                                 .environment(\.colorScheme, .dark)
                         }
                         .buttonStyle(PressableStyle())
@@ -287,7 +292,7 @@ struct DrillView: View {
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Theme.elevated, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(Theme.elevated, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     Button {
@@ -298,7 +303,7 @@ struct DrillView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                     }
                     .buttonStyle(PressableStyle())
                 }
@@ -351,7 +356,7 @@ struct DrillView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous))
         }
         .buttonStyle(PressableStyle())
     }

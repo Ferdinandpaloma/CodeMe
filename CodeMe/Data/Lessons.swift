@@ -18,7 +18,7 @@ enum LessonBank {
 
     static let bigO = Lesson(
         id: "fundamentals.big-o", title: "Big-O Notation", subtitle: "How to measure and compare solutions",
-        icon: "speedometer", color: Color(hex: 0xF472B6),
+        icon: "speedometer", color: Palette.pink.color,
         sections: [
             LessonSection(heading: "What Big-O measures", body: "Big-O describes how an algorithm's running time (or memory) **grows** as the input size `n` grows. Constants and smaller terms are dropped: `3n + 10` becomes **O(n)**.\n\nInterviewers care about growth because a solution that's fine for 100 items can time out at 100,000."),
             LessonSection(heading: "The common classes", body: "From fastest to slowest:\n\n• **O(1)**: hash lookup, array index\n• **O(log n)**: binary search, halving every step\n• **O(n)**: one pass over the input\n• **O(n log n)**: sorting\n• **O(n²)**: nested loops over the input\n• **O(2ⁿ)**: every subset\n• **O(n!)**: every permutation"),
@@ -43,7 +43,7 @@ enum LessonBank {
 
     static let pythonToolkit = Lesson(
         id: "fundamentals.python", title: "Python for Interviews", subtitle: "The built-ins you'll use every day",
-        icon: "chevron.left.forwardslash.chevron.right", color: Color(hex: 0xFFCB6B),
+        icon: "chevron.left.forwardslash.chevron.right", color: Palette.amber.color,
         sections: [
             LessonSection(heading: "Hash maps & sets", body: "`dict` and `set` give O(1) average lookups. The `collections` module adds two shortcuts you'll use constantly.", code: #"""
                 seen = set()

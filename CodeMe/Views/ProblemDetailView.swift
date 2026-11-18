@@ -54,9 +54,9 @@ struct ProblemDetailView: View {
                 Button {
                     store.toggleStar(problem)
                 } label: {
-                    Image(systemName: store.isStarred(problem) ? "star.fill" : "star")
-                        .foregroundStyle(store.isStarred(problem) ? .yellow : .primary)
-                        .contentTransition(.symbolEffect(.replace))
+                    SwapIcon(store.isStarred(problem) ? "star.fill" : "star")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(store.isStarred(problem) ? Palette.yellow.color : .primary)
                 }
                 Link(destination: problem.leetCodeURL) {
                     Image(systemName: "arrow.up.right.square")
@@ -133,7 +133,7 @@ struct ProblemDetailView: View {
                 .font(.subheadline)
                 .focused($noteFocused)
                 .padding(12)
-                .background(Theme.elevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Theme.elevated, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
         }
         .card()
         .onAppear { noteDraft = store.note(for: problem) }
@@ -172,13 +172,13 @@ struct ProblemDetailView: View {
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.black)
                         .frame(width: 22, height: 22)
-                        .background(Color.yellow, in: Circle())
+                        .background(Palette.yellow.color, in: Circle())
                     MarkdownText(problem.hints[index])
                         .font(.subheadline)
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.yellow.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(Palette.yellow.color.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
             if hintsShown < problem.hints.count {
@@ -189,8 +189,8 @@ struct ProblemDetailView: View {
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.stroke, style: StrokeStyle(lineWidth: 1, dash: [5])))
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.control, style: .continuous).strokeBorder(Theme.stroke, style: StrokeStyle(lineWidth: 1, dash: [5])))
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.yellow)
@@ -214,10 +214,10 @@ struct ProblemDetailView: View {
                 } label: {
                     HStack(spacing: 14) {
                         Image(systemName: "play.rectangle.fill")
-                            .font(.title2)
+                            .font(.title2.weight(.semibold))
                             .foregroundStyle(.white)
                             .frame(width: 48, height: 48)
-                            .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(Theme.brandGradient, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Visual walkthrough")
                                 .font(.headline)
@@ -267,7 +267,7 @@ struct ProblemDetailView: View {
             if isSolutionLocked {
                 VStack(spacing: 14) {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 30))
+                        .font(.system(size: 30, weight: .semibold))
                         .foregroundStyle(Theme.brandGradient)
                     Text("Give it a try first")
                         .font(.title3.weight(.bold))
@@ -291,7 +291,9 @@ struct ProblemDetailView: View {
                     .font(.subheadline.weight(.semibold))
                 }
                 .padding(24)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                // Capsule button inset 24pt: radius = button half-height (~22) + padding.
+                .background(.ultraThinMaterial, in: .rounded(Radius.outer(inner: 22, padding: 24)))
+                .overlay(RoundedRectangle(cornerRadius: Radius.outer(inner: 22, padding: 24), style: .continuous).strokeBorder(Theme.stroke, lineWidth: 0.75))
                 .padding(.top, 40)
                 .padding(.horizontal, 8)
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
@@ -328,9 +330,9 @@ struct ProblemDetailView: View {
                     Button {
                         withAnimation(.spring) { store.toggleSolved(problem) }
                     } label: {
-                        Image(systemName: store.isSolved(problem) ? "checkmark.seal.fill" : "checkmark.seal")
+                        SwapIcon(store.isSolved(problem) ? "checkmark.seal.fill" : "checkmark.seal")
+                            .fontWeight(.semibold)
                             .foregroundStyle(store.isSolved(problem) ? Theme.easy : CodeTheme.plain)
-                            .contentTransition(.symbolEffect(.replace))
                     }
                 }
                 .foregroundStyle(CodeTheme.plain.opacity(0.85))
@@ -377,15 +379,18 @@ struct ProblemDetailView: View {
             Button {
                 withAnimation(.spring(duration: 0.4)) { store.toggleSolved(problem) }
             } label: {
-                Label(solved ? "Solved" : "Mark as Solved", systemImage: solved ? "checkmark.seal.fill" : "checkmark.circle")
+                HStack(spacing: 8) {
+                    SwapIcon(solved ? "checkmark.seal.fill" : "checkmark.circle")
+                    Text(solved ? "Solved" : "Mark as Solved")
+                        .contentTransition(.interpolate)
+                }
                     .font(.headline)
-                    .symbolEffect(.bounce, value: solved)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
                     .foregroundStyle(solved ? Theme.easy : .white)
                     .background(
                         solved ? AnyShapeStyle(Theme.easy.opacity(0.15)) : AnyShapeStyle(Theme.brandGradient),
-                        in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        in: RoundedRectangle(cornerRadius: Radius.control + 2, style: .continuous)
                     )
             }
             .buttonStyle(PressableStyle())
@@ -396,8 +401,7 @@ struct ProblemDetailView: View {
                 Image(systemName: "keyboard")
                     .font(.headline)
                     .frame(width: 54, height: 52)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 1))
+                    .surface(radius: Radius.control + 2)
             }
             .buttonStyle(PressableStyle())
             .accessibilityLabel("Open code editor")
@@ -428,7 +432,7 @@ private struct ExampleCard: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.elevated, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Theme.elevated, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
             .overlay(alignment: .leading) {
                 UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12, style: .continuous)
                     .fill(Theme.accent)

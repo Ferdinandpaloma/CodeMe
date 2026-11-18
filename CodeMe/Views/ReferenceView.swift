@@ -31,9 +31,9 @@ enum ReferenceSheet: String, Hashable, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .bigO: Color(hex: 0xF472B6)
-        case .python: Color(hex: 0x3B82F6)
-        case .patterns: Color(hex: 0x14B8A6)
+        case .bigO: Palette.pink.color
+        case .python: Palette.blue.color
+        case .patterns: Palette.teal.color
         }
     }
 }
@@ -243,7 +243,7 @@ struct ReferenceView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(topic.signals, id: \.self) { signal in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Image(systemName: "sparkle").font(.caption).foregroundStyle(topic.color)
+                            Image(systemName: "sparkle").font(.caption.weight(.semibold)).foregroundStyle(topic.color)
                             MarkdownText(signal).font(.subheadline)
                         }
                     }
@@ -277,7 +277,7 @@ struct ReferenceCard: View {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 44, height: 44)
-                .background(sheet.color.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(sheet.color.oklchGradient, in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(sheet.title).font(.headline).foregroundStyle(.primary)
                 Text(sheet.subtitle).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading)
