@@ -3,11 +3,14 @@ import SwiftUI
 @main
 struct CodeMeApp: App {
     @State private var store = ProgressStore()
+    @State private var sync = CloudSync(disabledReason: CloudSync.configure())
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(store)
+                .environment(sync)
+                .task { sync.start(with: store) }
         }
     }
 }

@@ -36,6 +36,7 @@ enum Appearance: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
     @Environment(ProgressStore.self) private var store
+    @Environment(CloudSync.self) private var sync
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage(SettingsKey.appearance) private var appearance = Appearance.system
@@ -85,6 +86,34 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    LabeledContent("Status") {
+                        HStack(spacing: 6) {
+                            SwapIcon(syncIcon)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(syncColor)
+                            Text(syncLabel)
+                                .contentTransition(.interpolate)
+                        }
+                        .animation(.snappy, value: sync.status)
+                    }
+                    if let uid = sync.userID {
+                        LabeledContent("Account ID") {
+                            Text(uid.prefix(10) + "…")
+                                .font(.footnote.monospaced())
+                                .textSelection(.enabled)
+                        }
+                    }
+                    if sync.isEnabled {
+                        Button("Sync Now") { sync.syncNow() }
+                            .disabled(sync.userID == nil || sync.status == .syncing)
+                    }
+                } header: {
+                    Text("Cloud sync")
+                } footer: {
+                    Text(syncFooter)
+                }
+
+                Section {
                     LabeledContent("Problems", value: "\(ProblemBank.all.count)")
                     LabeledContent("Lessons", value: "\(LessonBank.all.count)")
                     LabeledContent("Walkthroughs", value: "\(Walkthroughs.available.count)")
@@ -113,5 +142,41 @@ struct SettingsView: View {
             }
         }
         .preferredColorScheme(appearance.colorScheme)
+    }
+
+    private var syncIcon: String {
+        switch sync.status {
+        case .disabled: "icloud.slash"
+        case .connecting, .syncing: "arrow.triangle.2.circlepath.icloud"
+        case .synced: "checkmark.icloud"
+        case .failed: "exclamationmark.icloud"
+        }
+    }
+
+    private var syncColor: Color {
+        switch sync.status {
+        case .disabled: .secondary
+        case .connecting, .syncing: Theme.accent
+        case .synced: Theme.easy
+        case .failed: Theme.hard
+        }
+    }
+
+    private var syncLabel: String {
+        switch sync.status {
+        case .disabled: "Off"
+        case .connecting: "Connecting…"
+        case .syncing: "Syncing…"
+        case .synced(let date): "Synced \(date.formatted(date: .omitted, time: .shortened))"
+        case .failed: "Error"
+        }
+    }
+
+    private var syncFooter: String {
+        switch sync.status {
+        case .disabled(let reason): reason
+        case .failed(let message): message
+        default: "Progress, code, notes and interview history are backed up to your private account and still work offline."
+        }
     }
 }

@@ -43,6 +43,38 @@ struct InterviewRecord: Codable, Identifiable, Equatable {
     var passed: Bool { solvedIDs.count == problemIDs.count && seconds <= limitSeconds }
 }
 
+/// Everything the app syncs to the cloud, as one Codable value.
+struct ProgressSnapshot: Codable, Equatable {
+    var solved: [String: Date] = [:]
+    var starred: Set<String> = []
+    var drafts: [String: String] = [:]
+    var bestQuizStreak = 0
+    var reviews: [String: ReviewState] = [:]
+    var completedLessons: Set<String> = []
+    var notes: [String: String] = [:]
+    var interviews: [InterviewRecord] = []
+    var drillCorrect = 0
+
+    var isEmpty: Bool { self == ProgressSnapshot() }
+
+    /// Combines two copies without losing work: union of sets, earliest solve date,
+    /// most-practised review state, longest code/notes, highest counters.
+    func merged(with other: ProgressSnapshot) -> ProgressSnapshot {
+        var out = self
+        out.solved.merge(other.solved) { min($0, $1) }
+        out.starred.formUnion(other.starred)
+        out.drafts.merge(other.drafts) { $0.count >= $1.count ? $0 : $1 }
+        out.bestQuizStreak = max(bestQuizStreak, other.bestQuizStreak)
+        out.reviews.merge(other.reviews) { $0.reps >= $1.reps ? $0 : $1 }
+        out.completedLessons.formUnion(other.completedLessons)
+        out.notes.merge(other.notes) { $0.count >= $1.count ? $0 : $1 }
+        let known = Set(interviews.map(\.id))
+        out.interviews = (interviews + other.interviews.filter { !known.contains($0.id) }).sorted { $0.date > $1.date }
+        out.drillCorrect = max(drillCorrect, other.drillCorrect)
+        return out
+    }
+}
+
 /// Persists the learner's progress (solved problems, stars, code drafts) in UserDefaults.
 @Observable
 final class ProgressStore {
@@ -57,6 +89,8 @@ final class ProgressStore {
     private(set) var drillCorrect: Int = 0
 
     @ObservationIgnored private let defaults: UserDefaults
+    /// Called after any local change is saved (used by CloudSync to push).
+    @ObservationIgnored var onChange: (() -> Void)?
 
     private enum Key {
         static let solved = "progress.solved"
@@ -240,6 +274,7 @@ final class ProgressStore {
     func recordDrillCorrect() {
         drillCorrect += 1
         defaults.set(drillCorrect, forKey: Key.drills)
+        onChange?()
     }
 
     // MARK: Stars
@@ -272,6 +307,7 @@ final class ProgressStore {
         guard streak > bestQuizStreak else { return }
         bestQuizStreak = streak
         defaults.set(streak, forKey: Key.quiz)
+        onChange?()
     }
 
     // MARK: Reset
@@ -289,6 +325,41 @@ final class ProgressStore {
         for key in Key.all {
             defaults.removeObject(forKey: key)
         }
+        onChange?()
+    }
+
+    // MARK: Snapshot (cloud sync)
+
+    var snapshot: ProgressSnapshot {
+        ProgressSnapshot(solved: solved, starred: starred, drafts: drafts, bestQuizStreak: bestQuizStreak,
+                         reviews: reviews, completedLessons: completedLessons, notes: notes,
+                         interviews: interviews, drillCorrect: drillCorrect)
+    }
+
+    /// Replaces local state with a snapshot (e.g. from the cloud) without echoing it back.
+    func apply(_ snapshot: ProgressSnapshot) {
+        guard snapshot != self.snapshot else { return }
+        let callback = onChange
+        onChange = nil
+        defer { onChange = callback }
+        solved = snapshot.solved
+        starred = snapshot.starred
+        drafts = snapshot.drafts
+        bestQuizStreak = snapshot.bestQuizStreak
+        reviews = snapshot.reviews
+        completedLessons = snapshot.completedLessons
+        notes = snapshot.notes
+        interviews = snapshot.interviews
+        drillCorrect = snapshot.drillCorrect
+        save(solved, key: Key.solved)
+        save(starred, key: Key.starred)
+        save(drafts, key: Key.drafts)
+        save(reviews, key: Key.reviews)
+        save(completedLessons, key: Key.lessons)
+        save(notes, key: Key.notes)
+        save(interviews, key: Key.interviews)
+        defaults.set(bestQuizStreak, forKey: Key.quiz)
+        defaults.set(drillCorrect, forKey: Key.drills)
     }
 
     // MARK: Persistence
@@ -297,6 +368,7 @@ final class ProgressStore {
         if let data = try? JSONEncoder().encode(value) {
             defaults.set(data, forKey: key)
         }
+        onChange?()
     }
 
     private static func load<T: Decodable>(_ type: T.Type, from defaults: UserDefaults, key: String) -> T? {
