@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Each signed-in user (anonymous included) can read and write only users/{their uid}.
+// Everything else is denied.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['progress', 'updatedAt', 'deviceID', 'schema'])
+        && request.resource.data.progress is map
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.deviceID is string;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

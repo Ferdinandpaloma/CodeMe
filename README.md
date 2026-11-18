@@ -46,3 +46,19 @@ Add a `Problem(...)` to one of the files in `CodeMe/Data/`. The starter code for
 - **Blurred icon swaps:** `SwapIcon` blurs and scales between symbols when the state changes.
 - **Matched icon weights:** symbols use the same weight as the text next to them.
 - **Dynamic viewport:** sizes and grid columns are derived from the available width and Dynamic Type.
+
+## Cloud sync (Firebase)
+
+Progress is backed up to Firestore at `users/{uid}` (`CodeMe/Store/CloudSync.swift`). Users are signed in anonymously, so there is no sign-up screen. UserDefaults is still where the app reads and writes locally, so everything works offline.
+
+How changes are combined:
+- The first time an account syncs on a device, the local and cloud copies are merged and nothing is dropped.
+- After that, the newest write wins, and changes from other devices show up live.
+
+Setup:
+1. In the [Firebase console](https://console.firebase.google.com), create a project and add an iOS app with bundle ID `com.codeme.app`.
+2. Download `GoogleService-Info.plist` into `CodeMe/` and run `xcodegen generate`.
+3. Under **Authentication → Sign-in method**, enable **Anonymous**.
+4. Create a **Firestore Database**, then deploy the rules with `firebase deploy --only firestore:rules`, or paste `firestore.rules` into the console.
+
+If the plist is missing or was made for a different bundle ID, sync stays off. Settings → Cloud sync says why.
